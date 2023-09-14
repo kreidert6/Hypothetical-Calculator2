@@ -4,10 +4,10 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=\, initial-scale=1.0" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <title>Fetch JSON from API</title>
+    <title>Hypothetical Calculator</title>
   </head>
   <body>
-    <h1>Where is the ISS?</h1>
+    <h1>What if I invested?</h1>
 
     <form>
         <label for="stockSymbol">Stock Symbol:</label>
@@ -25,83 +25,175 @@
         <button type="button" onclick="run()">CALCULATE</button>
     </form>
 
-
-
-    <p>
-      ltitude: <span id="lat"></span>°<br />
-      longitude: <span id="lon"></span>°
-    </p>
+    <div class="loading" id="loading"></div>
+    <div id="result"></div>
 
 
 
     <script>
 
       function run() {
-      const stock_symbol = document.getElementById('stockSymbol').value;
-      const investment_amount = document.getElementById('investmentAmount').value;
-      const investment_date = document.getElementById('investmentDate').value;
-      const api_key = '5OI48rnfXPLgW4VbFggC2RiamryB6pE2ZdqE2Ty1'
+        const stock_symbol = document.getElementById('stockSymbol').value;
+        const investment_amount = document.getElementById('investmentAmount').value;
+        const investment_date = document.getElementById('investmentDate').value;
+        const api_key = '5OI48rnfXPLgW4VbFggC2RiamryB6pE2ZdqE2Ty1'
 
-      console.log(stock_symbol)
-      console.log(investment_amount)
-      console.log(investment_date)
+        console.log(stock_symbol)
+        console.log(investment_amount)
+        console.log(investment_date)
 
-      //const api_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=IBM&apikey=demo';
-      const api_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=' + stock_symbol + '&apikey=' + api_key
-      getData(stock_symbol, investment_amount,investment_date, api_url);
+
+        //const api_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=IBM&apikey=demo';
+        const api_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=' + stock_symbol + '&apikey=' + api_key
+        getData(stock_symbol, investment_amount,investment_date, api_url);
       
       }
       async function getData(stock_symbol, investment_amount, investment_date, api_url) {
-    const response = await fetch(api_url);
-    const data = await response.json();
+        const response = await fetch(api_url);
+        const data = await response.json();
 
-    const weekly_adjusted_prices = data['Weekly Adjusted Time Series'];
-    const dates = Object.keys(weekly_adjusted_prices);
-    const last_closed_date = dates[0];
+        const weekly_adjusted_prices = data['Weekly Adjusted Time Series'];
+        console.log(weekly_adjusted_prices)
+        const dates = Object.keys(weekly_adjusted_prices);
 
-    const last_closed_date_obj = new Date(last_closed_date);
-    let investment_date_obj = new Date(investment_date);
+        //latest closed date in data
+        const last_closed_date = dates[0];
+        const last_closed_date_obj = new Date(last_closed_date);
+
+        //convert investment_date to obj, probably will turn into one day previous, for comparison purposes
+        
+        //const current_date = new Date();
+        const new_investment_date = findInvestmentDate(investment_date, weekly_adjusted_prices)
+        const investment_date_data = weekly_adjusted_prices[new_investment_date]
+        console.log(new_investment_date)
+        console.log(investment_date_data)
+
+        const initial_shares = findInitialShares(investment_amount, investment_date_data)
+        const shares_bought_through_dividends = findSharesBoughtThroughDividends(new_investment_date, weekly_adjusted_prices)
+        const total_shares_owned = initial_shares + shares_bought_through_dividends
+        console.log(weekly_adjusted_prices)
+        const current_stock_price = getCurrentStockPrice(weekly_adjusted_prices)
+        console.log("current stock price: ")
+        console.log(current_stock_price)
+        const current_value = total_shares_owned * current_stock_price
+
+        console.log("current value")
+        console.log(current_value) 
+        updateResult(current_value)
+       
+
+      }
+
+
+      function updateResult(current_value) {
+            // Hide loading and show the result
+            const resultDiv = document.getElementById('result');
+            resultDiv.innerHTML = `<p><strong>Current Value:</strong> $${current_value.toFixed(2)}</p>`;
+
+            const loadingDiv = document.getElementById('loading');
+            loadingDiv.style.display = 'none';
+        }
+      
+      function getCurrentStockPrice(weekly_adjusted_prices){
+        const data = JSON.parse(JSON.stringify(weekly_adjusted_prices));
+
+        // Find the most recent date among the keys
+        const dates = Object.keys(data);
+        const most_recent_date = dates[0]; // Assuming dates are in descending order
+
+        // Access the adjusted close price of the most recent date
+        const adjusted_close_price = data[most_recent_date]["5. adjusted close"];
+        return adjusted_close_price
+      }
+
+
+      function findSharesBoughtThroughDividends(start_date, data){
+      
+        console.log("start date:" + start_date);
+
+        const dates = Object.keys(data).reverse();
+        console.log(dates)
+        let start_processing = false;
+        let shares_bought = 0
+
+        for (const date of dates) {
+          
+            if (date === start_date) {
+              console.log("triggered")
+                start_processing = true;
+            }
+
+            if (start_processing) {
+                const dividend_amount = parseFloat(data[date]["7. dividend amount"]);
+            
+                if (dividend_amount > 0) {
+                    const stock_price = data[date]["5. adjusted close"]
+                    shares_bought += dividend_amount / stock_price
+                   
+                    // Handle the dividend here
+                }
+            }
+
+        }
+        console.log("shares bought from dividends")
+        console.log(shares_bought)
+        return shares_bought;
+      }
+
+
+      function findInitialShares(amount, data){
+        stock_price = data["5. adjusted close"]
+        console.log("stock price")
+        console.log(stock_price)
+
+        stocks_bought = amount / stock_price
+        console.log("stocks bought")
+        console.log(stocks_bought)
+        return stocks_bought
+      }
+
+      function findInvestmentDate(investment_date, weekly_adjusted_prices){
+        let investment_date_obj = new Date(investment_date);
+        
+        
+        let new_investment_date = investment_date
+        console.log("starting new invest date: " + new_investment_date)
+
     
+        if (!(new_investment_date in weekly_adjusted_prices)){
+          let investment_date_obj = new Date(investment_date);
+          new_investment_date = formatDate(investment_date_obj);
+          while (!(new_investment_date in weekly_adjusted_prices)) {
+            investment_date_obj = addDays(investment_date_obj, -1)
+            new_investment_date = formatDate(investment_date_obj);
+          
+        }
+      }
+        console.log("returning date:" + new_investment_date)
+        return new_investment_date 
+        
+      
+      
+        
+    }
+            
 
 
-    console.log("investment date");
-    console.log(investment_date)
-    investent_date_obj = addDays(investment_date_obj, 1)
-    console.log(investment_date_obj);
+    function addDays(date, days) {
+        const result = new Date(date);
+        result.setDate(result.getDate() + days);
+        return result;
+    }
 
-    
+    function formatDate(date) {
+        // Format the Date object as "YYYY-MM-DD"
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
 
-    // while (!(investment_date in weekly_adjusted_prices)) {
-    //     console.log("adding");
-    //     investment_date_obj = addDays(investment_date_obj, 1); // Update the Date object
-    // }
 
-    console.log("investment date + 1");
-    
-  
-
-    // Convert investment_date_obj back to string for further use if needed
-    const formatted_investment_date = formatDate(investment_date_obj);
-
-    const adjusted_close_investment_date = data["Weekly Adjusted Time Series"][formatted_investment_date]["5. adjusted close"];
-    const adjusted_last_close = data["Weekly Adjusted Time Series"][last_closed_date]["5. adjusted close"];
-}
-
-function addDays(date, days) {
-    const result = new Date(date);
-    result.setDate(result.getDate() + days);
-    return result;
-}
-
-function formatDate(date) {
-    // Format the Date object as "YYYY-MM-DD"
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-}
-
-    
 
       
     </script>
