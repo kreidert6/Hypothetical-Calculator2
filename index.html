@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Hypothetical Calculator</title>
+
+    
+
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -73,6 +76,11 @@
     <div class="loading" id="loading"></div>
     <div id="result"></div>
 
+    <div>
+        <canvas id="myChart"></canvas>
+      </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <script>
         function run() {
         const stock_symbol = document.getElementById('stockSymbol').value;
@@ -96,11 +104,13 @@
 
         const weekly_adjusted_prices = data['Weekly Adjusted Time Series'];
         console.log(weekly_adjusted_prices)
-        const dates = Object.keys(weekly_adjusted_prices);
-
+        const dates = Object.keys(weekly_adjusted_prices).reverse();
+        const prices = getPrices(weekly_adjusted_prices).reverse();
+        console.log("dates: " + dates)
+        console.log("prices: " + prices)
         //latest closed date in data
-        const last_closed_date = dates[0];
-        const last_closed_date_obj = new Date(last_closed_date);
+        // const last_closed_date = dates[0];
+        // const last_closed_date_obj = new Date(last_closed_date);
 
         //convert investment_date to obj, probably will turn into one day previous, for comparison purposes
         
@@ -112,6 +122,7 @@
 
         const initial_shares = findInitialShares(investment_amount, investment_date_data)
         const shares_bought_through_dividends = findSharesBoughtThroughDividends(new_investment_date, weekly_adjusted_prices)
+        
         const total_shares_owned = initial_shares + shares_bought_through_dividends
         console.log(weekly_adjusted_prices)
         const current_stock_price = getCurrentStockPrice(weekly_adjusted_prices)
@@ -122,11 +133,26 @@
         console.log("current value")
         console.log(current_value) 
         updateResult(current_value)
+
+
+        chartIt(dates, prices)
        
 
       }
 
+      function getPrices(data) {
+        const adjustedClosePrices = [];
 
+        // Iterate through the JSON data and extract the adjusted close prices
+        for (const date in data) {      
+            if (data.hasOwnProperty(date)) {
+                const adjustedClose = parseFloat(data[date]["5. adjusted close"]);
+                adjustedClosePrices.push(adjustedClose.toFixed(2));
+            }
+        }
+
+        return adjustedClosePrices
+      }
       function updateResult(current_value) {
             // Hide loading and show the result
             const resultDiv = document.getElementById('result');
@@ -235,9 +261,38 @@
         return `${year}-${month}-${day}`;
     }
 
+    function chartIt(x_data, y_data){
+
+        const ctx = document.getElementById('myChart');
+  
+        new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: x_data,
+            datasets: [{
+            label: 'Stock Price: ',
+            data: y_data,
+            borderWidth: 1
+            }]
+        },
+        options: {
+            scales: {
+            y: {
+                beginAtZero: true
+            }
+            }
+        }
+        });
+        }
+
 
 
     </script>
+
+
+
+
+
 </body>
 </html>
 
