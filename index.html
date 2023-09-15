@@ -87,6 +87,7 @@
         const investment_amount = document.getElementById('investmentAmount').value;
         const investment_date = document.getElementById('investmentDate').value;
         const api_key = '5OI48rnfXPLgW4VbFggC2RiamryB6pE2ZdqE2Ty1'
+        const api_key2 = 'KSRMSRPN5YK0R57P'
 
         console.log(stock_symbol)
         console.log(investment_amount)
@@ -94,7 +95,7 @@
 
 
         //const api_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=IBM&apikey=demo';
-        const api_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=' + stock_symbol + '&apikey=' + api_key
+        const api_url = 'https://www.alphavantage.co/query?function=TIME_SERIES_WEEKLY_ADJUSTED&symbol=' + stock_symbol + '&apikey=' + api_key2
         getData(stock_symbol, investment_amount,investment_date, api_url);
       
       }
@@ -103,35 +104,32 @@
         const data = await response.json();
 
         const weekly_adjusted_prices = data['Weekly Adjusted Time Series'];
-        console.log(weekly_adjusted_prices)
-        const dates = Object.keys(weekly_adjusted_prices).reverse();
-        const prices = getPrices(weekly_adjusted_prices).reverse();
-        console.log("dates: " + dates)
-        console.log("prices: " + prices)
-        //latest closed date in data
-        // const last_closed_date = dates[0];
-        // const last_closed_date_obj = new Date(last_closed_date);
-
-        //convert investment_date to obj, probably will turn into one day previous, for comparison purposes
         
-        //const current_date = new Date();
         const new_investment_date = findInvestmentDate(investment_date, weekly_adjusted_prices)
+        const relevant_data = filterDates(new_investment_date, weekly_adjusted_prices)
+        console.log(relevant_data)
+        const chart_data = chartData(investment_amount, relevant_data)
+      
+        const dates = chart_data[0]
+        const prices = chart_data[1]
+
+        console.log(dates)
+        console.log(prices)
+      
+        
         const investment_date_data = weekly_adjusted_prices[new_investment_date]
-        console.log(new_investment_date)
-        console.log(investment_date_data)
+      
 
         const initial_shares = findInitialShares(investment_amount, investment_date_data)
         const shares_bought_through_dividends = findSharesBoughtThroughDividends(new_investment_date, weekly_adjusted_prices)
         
         const total_shares_owned = initial_shares + shares_bought_through_dividends
-        console.log(weekly_adjusted_prices)
+       
         const current_stock_price = getCurrentStockPrice(weekly_adjusted_prices)
-        console.log("current stock price: ")
-        console.log(current_stock_price)
+      
         const current_value = total_shares_owned * current_stock_price
 
-        console.log("current value")
-        console.log(current_value) 
+  
         updateResult(current_value)
 
 
@@ -140,6 +138,17 @@
 
       }
 
+
+
+      function filterDates(start_date, data){
+        const filtered_data = {};
+        for (const date in data) {
+            if (date >= start_date) {
+                filtered_data[date] = data[date];
+            }
+        }
+        return filtered_data
+      }
       function getPrices(data) {
         const adjustedClosePrices = [];
 
@@ -261,18 +270,106 @@
         return `${year}-${month}-${day}`;
     }
 
+
+
+
+
+
+
+
+    function chartData(investment_amount, data){
+       
+
+       // Initial investment amount
+      let sharesBought = 0; // Number of shares bought initially
+      let currentValue = 0; // Current value of the investment
+      const dailyValues = []; // Array to store daily values
+
+      const sortedDates = Object.keys(data).sort();
+      console.log(sortedDates)
+      for (const date of sortedDates) {
+          
+          const adjustedClosePrice = parseFloat(data[date]["5. adjusted close"]);
+          const dividendAmount = parseFloat(data[date]["7. dividend amount"]);
+
+          
+          if (sharesBought === 0) {
+              // Calculate the number of shares bought on the first day
+              sharesBought = investment_amount / adjustedClosePrice;
+              console.log("investment amount: " +investment_amount )
+              console.log(" price: "+ adjustedClosePrice)
+              console.log("shares bought: " + sharesBought)
+          }
+
+          // Calculate the current value of the investment on this day
+          
+
+          if (!isNaN(dividendAmount) && dividendAmount > 0) {
+              // Calculate the additional shares bought through dividends and adjust sharesBought
+              const additionalSharesFromDividends = dividendAmount / adjustedClosePrice;
+              sharesBought += additionalSharesFromDividends;
+          }
+          
+          const currentValue = sharesBought * adjustedClosePrice;
+          console.log("shares bought: " + sharesBought);
+          console.log("close price: "+ adjustedClosePrice);
+          console.log("current val: " + currentValue);
+
+          // Log the current value and date to the array
+          dailyValues.push({
+              date: date,
+              value: currentValue.toFixed(2),
+          });
+          console.log("shares owned:" + sharesBought);
+         
+      }
+      const datesArray = [];
+
+      // Extract the date values from the dailyValues array
+      for (const entry of dailyValues) {
+          datesArray.push(entry.date);
+      }
+
+      const valuesArray = [];
+
+      // Extract the date values from the dailyValues array
+      for (const entry of dailyValues) {
+          valuesArray.push(parseFloat(entry.value));
+      }
+
+      const finalArray = [];
+
+      finalArray.push(datesArray);
+      finalArray.push(valuesArray);
+
+      return finalArray;
+
+    }
+
+
     function chartIt(x_data, y_data){
 
         const ctx = document.getElementById('myChart');
+        if (ctx.chart) {
+        ctx.chart.destroy();
+    }
   
-        new Chart(ctx, {
+    ctx.chart = new Chart(ctx, {
         type: 'line',
         data: {
             labels: x_data,
             datasets: [{
-            label: 'Stock Price: ',
-            data: y_data,
-            borderWidth: 1
+                label: 'Stock Price: ',
+                data: y_data,
+                borderWidth: 1,
+                fill: {
+                    target: 'origin',
+                    above: 'rgb(173, 216, 230)',
+                    below: 'rgb(0, 0, 255)'
+                }
+                
+
+            
             }]
         },
         options: {
@@ -288,8 +385,6 @@
 
 
     </script>
-
-
 
 
 
