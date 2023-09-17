@@ -311,7 +311,7 @@
 
       function findSharesBoughtThroughDividends(start_date, data){
       
-        console.log("start date:" + start_date);
+    
 
         const dates = Object.keys(data).reverse();
         console.log(dates)
@@ -321,7 +321,7 @@
         for (const date of dates) {
           
             if (date === start_date) {
-              console.log("triggered")
+              
                 start_processing = true;
             }
 
@@ -337,20 +337,17 @@
             }
 
         }
-        console.log("shares bought from dividends")
-        console.log(shares_bought)
+      
         return shares_bought;
       }
 
 
       function findInitialShares(amount, data){
         stock_price = data["5. adjusted close"]
-        console.log("stock price")
-        console.log(stock_price)
+      
 
         stocks_bought = amount / stock_price
-        console.log("stocks bought")
-        console.log(stocks_bought)
+       
         return stocks_bought
       }
 
@@ -370,7 +367,7 @@
           
         }
       }
-        console.log("returning date:" + new_investment_date)
+        
         return new_investment_date 
     }
 
@@ -405,9 +402,7 @@
           if (sharesBought === 0) {
               // Calculate the number of shares bought on the first day
               sharesBought = investment_amount / adjustedClosePrice;
-              console.log("investment amount: " +investment_amount )
-              console.log(" price: "+ adjustedClosePrice)
-              console.log("shares bought: " + sharesBought)
+              
           }
 
           // Calculate the current value of the investment on this day
@@ -420,16 +415,14 @@
           }
           
           const currentValue = sharesBought * adjustedClosePrice;
-          console.log("shares bought: " + sharesBought);
-          console.log("close price: "+ adjustedClosePrice);
-          console.log("current val: " + currentValue);
+          
 
           // Log the current value and date to the array
           dailyValues.push({
               date: date,
               value: currentValue.toFixed(2),
           });
-          console.log("shares owned:" + sharesBought);
+          
          
       }
       const datesArray = [];
