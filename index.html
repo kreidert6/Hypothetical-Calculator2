@@ -5,30 +5,65 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Hypothetical Calculator</title>
-
-    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js">
 
     <style>
+        /* Reset some default styles */
         body {
-            font-family: Arial, sans-serif;
             margin: 0;
             padding: 0;
+            font-family: Arial, sans-serif;
         }
-        h1 {
+
+        /* Container for the entire page */
+        .container {
+            background-color: #f8f8f8;
+            padding: 20px;
+        }
+
+        /* Header styles */
+        header {
             text-align: center;
+            margin-bottom: 20px;
         }
-        form {
+
+        h1 {
+            color: #007BFF;
+        }
+
+        /* Main content area */
+        .content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            border-radius: 5px;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Form styles */
+        .form-container {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .form {
+            flex: 1;
             max-width: 400px;
-            margin: 0 auto;
             padding: 20px;
             border: 1px solid #ccc;
             border-radius: 5px;
             background-color: #f9f9f9;
         }
+
         label {
             display: block;
             margin-bottom: 10px;
         }
+
         input[type="text"],
         input[type="number"],
         input[type="date"] {
@@ -38,6 +73,7 @@
             border: 1px solid #ccc;
             border-radius: 3px;
         }
+
         button[type="button"] {
             background-color: #007BFF;
             color: #fff;
@@ -45,47 +81,119 @@
             padding: 10px 20px;
             cursor: pointer;
         }
+
         button[type="button"]:hover {
             background-color: #0056b3;
         }
-        #result {
+
+        /* Chart styles */
+        #myChart {
+            width: 100%;
+            max-width: 800px;
+            margin-top: 20px;
+        }
+
+        /* Result and Total styles */
+        .result {
             text-align: center;
             margin-top: 20px;
+            font-size: 1.2rem;
+        }
+
+        .total {
+            display: flex;
+            justify-content: space-between;
+            max-width: 400px;
+            margin: 20px auto;
+        }
+
+        .total p {
+            margin: 0;
+            font-weight: bold;
+            font-size: 1.1rem;
         }
     </style>
 </head>
 <body>
-    <h1>What if I invested?</h1>
+    <!-- Page container -->
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>What if I invested?</h1>
+        </header>
 
-    <form>
-        <label for="stockSymbol">Stock Symbol:</label>
-        <input type="text" id="stockSymbol" required list="stockSymbols">
+        <!-- Main content area -->
+        <div class="content">
+            <!-- Form container -->
+            <div class="form-container">
+                <form class="form" id="form1">
+                    <label for="stockSymbol">Stock Symbol:</label>
+                    <input type="text" id="stockSymbol" required list="stockSymbols">
+            
+                    <!-- The datalist to hold stock symbol suggestions -->
+                    <datalist id="stockSymbols"></datalist>
+            
+                    <label for="investmentAmount">Investment Amount ($):</label>
+                    <input type="number" id="investmentAmount" required>
+            
+                    <label for="investmentDate">Investment Date:</label>
+                    <input type="date" id="investmentDate" required>
+            
+                    <button type="button" onclick="run(1)">CALCULATE</button>
+                </form>
 
-        <!-- The datalist to hold stock symbol suggestions -->
-        <datalist id="stockSymbols"></datalist>
+                <form class="form" id="form2">
+                    <label for="stockSymbol">Stock Symbol:</label>
+                    <input type="text" id="stockSymbol2" required list="stockSymbols">
 
-        <label for="investmentAmount">Investment Amount ($):</label>
-        <input type="number" id="investmentAmount" required>
+                    <!-- The datalist to hold stock symbol suggestions -->
+                    <datalist id="stockSymbols2"></datalist>
 
-        <label for="investmentDate">Investment Date:</label>
-        <input type="date" id="investmentDate" required>
+                    <label for="investmentAmount">Investment Amount ($):</label>
+                    <input type="number" id="investmentAmount2" required>
 
-        <button type="button" onclick="run()">CALCULATE</button>
-    </form>
+                    <label for="investmentDate">Investment Date:</label>
+                    <input type="date" id="investmentDate2" required>
 
-    <div class="loading" id="loading"></div>
-    <div id="result"></div>
+                    <button type="button" onclick="run(2)">CALCULATE</button>
+                </form>
+            </div>
 
-    <div>
-        <canvas id="myChart"></canvas>
-      </div>
+            <!-- Chart section -->
+            
+
+            <!-- Result and Total section -->
+            <div class="result" id="result"></div>
+
+            <div class="total">
+                <p>Total Profit: <span id="totalProfit">$0.00</span></p>
+                <p>Total Increase: <span id="totalIncrease">0.00%</span></p>
+            </div>
+
+            <canvas id="myChart"></canvas>
+
+        </div>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 
     <script>
-        function run() {
-        const stock_symbol = document.getElementById('stockSymbol').value;
-        const investment_amount = document.getElementById('investmentAmount').value;
-        const investment_date = document.getElementById('investmentDate').value;
+        function run(input) {
+            let stock_symbol = "";
+            let investment_amount = 0;
+            let investment_date = "";
+            if (input === 1){
+            
+                stock_symbol = document.getElementById('stockSymbol').value;
+        investment_amount = document.getElementById('investmentAmount').value;
+        investment_date = document.getElementById('investmentDate').value;
+            }
+            else{
+                 stock_symbol = document.getElementById('stockSymbol2').value;
+        investment_amount = document.getElementById('investmentAmount2').value;
+       investment_date = document.getElementById('investmentDate2').value;
+            }
+       
         const api_key = '5OI48rnfXPLgW4VbFggC2RiamryB6pE2ZdqE2Ty1'
         const api_key2 = 'KSRMSRPN5YK0R57P'
 
@@ -128,7 +236,11 @@
         const current_stock_price = getCurrentStockPrice(weekly_adjusted_prices)
       
         const current_value = total_shares_owned * current_stock_price
+        
 
+        const total_profit = current_value - investment_amount
+        const total_increase = ((current_value / investment_amount) * 100).toFixed(2)
+        
   
         updateResult(current_value)
 
@@ -163,13 +275,26 @@
         return adjustedClosePrices
       }
       function updateResult(current_value) {
-            // Hide loading and show the result
-            const resultDiv = document.getElementById('result');
-            resultDiv.innerHTML = `<p><strong>Current Value:</strong> $${current_value.toFixed(2)}</p>`;
+    // Hide loading and show the result
+    const resultDiv = document.getElementById('result');
+    resultDiv.innerHTML = `<p><strong>Current Value:</strong> $${current_value.toFixed(2)}</p>`;
 
-            const loadingDiv = document.getElementById('loading');
-            loadingDiv.style.display = 'none';
-        }
+    // const loadingDiv = document.getElementById('loading');
+    // loadingDiv.style.display = 'none';
+
+    // Calculate total_profit and total_increase
+    const investment_amount = parseFloat(document.getElementById('investmentAmount').value);
+    const total_profit = current_value - investment_amount;
+    const total_increase = (((current_value / investment_amount) - 1) * 100).toFixed(2);
+
+    // Update the elements with these values
+    const totalProfitElement = document.getElementById('totalProfit');
+    totalProfitElement.textContent = `$${total_profit.toFixed(2)}`;
+
+    const totalIncreaseElement = document.getElementById('totalIncrease');
+    totalIncreaseElement.textContent = `${total_increase}%`;
+}
+
       
       function getCurrentStockPrice(weekly_adjusted_prices){
         const data = JSON.parse(JSON.stringify(weekly_adjusted_prices));
@@ -232,10 +357,9 @@
       function findInvestmentDate(investment_date, weekly_adjusted_prices){
         let investment_date_obj = new Date(investment_date);
         
-        
         let new_investment_date = investment_date
         console.log("starting new invest date: " + new_investment_date)
-
+        console.log ("data: " + weekly_adjusted_prices)
     
         if (!(new_investment_date in weekly_adjusted_prices)){
           let investment_date_obj = new Date(investment_date);
@@ -248,13 +372,7 @@
       }
         console.log("returning date:" + new_investment_date)
         return new_investment_date 
-        
-      
-      
-        
     }
-            
-
 
     function addDays(date, days) {
         const result = new Date(date);
@@ -270,16 +388,7 @@
         return `${year}-${month}-${day}`;
     }
 
-
-
-
-
-
-
-
     function chartData(investment_amount, data){
-       
-
        // Initial investment amount
       let sharesBought = 0; // Number of shares bought initially
       let currentValue = 0; // Current value of the investment
@@ -350,52 +459,36 @@
     function chartIt(x_data, y_data){
 
         const ctx = document.getElementById('myChart');
+
         if (ctx.chart) {
         ctx.chart.destroy();
     }
-  
-    ctx.chart = new Chart(ctx, {
-        type: 'line',
-        data: {
-            labels: x_data,
-            datasets: [{
-                label: 'Stock Price: ',
-                data: y_data,
-                borderWidth: 1,
-                fill: {
-                    target: 'origin',
-                    above: 'rgb(173, 216, 230)',
-                    below: 'rgb(0, 0, 255)'
+
+        ctx.chart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: x_data,
+                datasets: [{
+                    label: 'Stock Price: ',
+                    data: y_data,
+                    borderWidth: 1,
+                    fill: {
+                        target: 'origin',
+                        above: 'rgb(173, 216, 230)',
+                        below: 'rgb(0, 0, 255)'
+                    }
+                }]
+            },
+            options: {
+                scales: {
+                y: {
+                    beginAtZero: true
                 }
-                
-
-            
-            }]
-        },
-        options: {
-            scales: {
-            y: {
-                beginAtZero: true
+                }
             }
-            }
-        }
         });
-        }
-
-
+    }
 
     </script>
-
-
-
 </body>
 </html>
-
-
-
-
-
-
-
-
-
